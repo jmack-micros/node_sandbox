@@ -6,6 +6,7 @@
 	"dependencies": {
 		"restify": "latest",
 		"bunyan": "latest",
-		"JSONSelect": "latest"
+		"JSONSelect": "latest",
+		"nodeunit": "latest"
 	} 
 }

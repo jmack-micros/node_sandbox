@@ -1,10 +1,35 @@
 var restify = require('restify');
 var door = require('./door.js');
-var server = restify.createServer({name: 'first'});
+
+var Logger = require('bunyan');
+
+var log = new Logger({
+	name: "first",
+	streams: [
+		{
+			stream: process.stdout,
+			level: 'debug'
+		},
+		{
+			path: "first.log",
+			level: "trace"
+		}
+	],
+	serializers: {
+		req: Logger.stdSerializers.req,
+		res: Logger.stdSerializers.res
+	}
+});
+
+var server = restify.createServer({
+	name: 'first',
+	log: log
+});
 
 server
 	.use(restify.fullResponse())
-	.use(restify.bodyParser());
+	.use(restify.bodyParser())
+	.use(restify.queryParser());
 
 //set Connection: close header for curl
 server
