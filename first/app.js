@@ -80,6 +80,25 @@ function setOpenHandler(doorInstance) {
 //
 // Routes
 //
+
+server.get('/remote/:timeout', function(req, res, next) {
+	var url = 'http://localhost:3001';
+	var path = '/delay/' + req.params.timeout;
+	var client = restify.createJsonClient({
+		url: url,
+		version: '*'
+	});
+
+	var myOutput = { remote: url + path };
+
+	client.get(path, function(error, request, response, objct) {
+		myOutput.data = objct;
+		res.send(myOutput);
+		return next();
+	});
+});
+
+
 server.get('/doors', function(req, res, next) {
 	res.send(doors);
 	return next(); 
