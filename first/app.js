@@ -2,17 +2,20 @@ var restify = require('restify');
 var door = require('./door.js');
 
 var Logger = require('bunyan');
-
 var log = new Logger({
 	name: "first",
 	streams: [
+		// {
+		// 	stream: process.stdout,
+		// 	level: 'debug'
+		// },
 		{
-			stream: process.stdout,
-			level: 'debug'
+			path: "./logs/first.info.log",
+			level: "info"
 		},
 		{
-			path: "first.log",
-			level: "trace"
+			path: "./logs/first.error.log",
+			level: "error"
 		}
 	],
 	serializers: {
@@ -35,9 +38,25 @@ server
 server
 	.pre(restify.pre.userAgentConnection());
 
+//
+// Logging
+//
+server.pre(function(req, res, next){
+	req.log.info({req: req}, 'start');
+	return next();
+});
+
+server.on('after', function(req, res, route) {
+	req.log.info({res: res}, 'finished');
+});
+
+
 // a container for some doors
 var doors = {};
 
+//
+// Helper functions for doors
+//
 function createDoor(colour) {
 	var retval = new door.Door(colour);
 	retval.domain = null;
@@ -58,6 +77,9 @@ function setOpenHandler(doorInstance) {
 	});
 }
 
+//
+// Routes
+//
 server.get('/doors', function(req, res, next) {
 	res.send(doors);
 	return next(); 
@@ -115,6 +137,9 @@ server.put('/door/:colour/close', function(req, res, next) {
 	return next();
 });
 
+//
+// Start server
+//
 server.listen(3000, function(){
 	console.log('node.js server %s listening at %s', server.name, server.url);
 });
