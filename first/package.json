@@ -1,0 +1,11 @@
+{
+	"name": "first",
+	"description": "first restify app",
+	"version": "0.0.1",
+	"private": true,
+	"dependencies": {
+		"restify": "latest",
+		"save": "latest",
+		"JSONSelect": "latest"
+	} 
+}
