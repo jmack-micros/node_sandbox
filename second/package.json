@@ -1,0 +1,10 @@
+{
+	"name": "second",
+	"description": "Restify app for dummy API for first to use.",
+	"version": "0.0.1",
+	"private": true,
+	"dependencies": {
+		"restify": "latest",
+		"bunyan": "latest"
+	} 
+}
