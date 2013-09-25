@@ -5,7 +5,8 @@
 	"private": true,
 	"dependencies": {
 		"restify": "latest",
-		"save": "latest",
-		"JSONSelect": "latest"
+		"bunyan": "latest",
+		"JSONSelect": "latest",
+		"nodeunit": "latest"
 	} 
 }

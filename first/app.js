@@ -1,18 +1,62 @@
 var restify = require('restify');
+var bunyan = require('bunyan');
+var log = bunyan.createLogger({
+	name: "first",
+	streams: [
+		// {
+		// 	stream: process.stdout,
+		// 	level: 'debug'
+		// },
+		{
+			path: "./logs/first.info.log",
+			level: "info"
+		},
+		{
+			path: "./logs/first.error.log",
+			level: "error"
+		}
+	],
+	serializers: {
+		req: bunyan.stdSerializers.req,
+		res: bunyan.stdSerializers.res
+	}
+});
+
+var server = restify.createServer({
+	name: 'first',
+	log: log
+});
+
 var door = require('./door.js');
-var server = restify.createServer({name: 'first'});
 
 server
 	.use(restify.fullResponse())
-	.use(restify.bodyParser());
+	.use(restify.bodyParser())
+	.use(restify.queryParser());
 
-//set Connection: close header for curl
+//set Connection: close header workaround for curl
 server
 	.pre(restify.pre.userAgentConnection());
+
+//
+// Logging
+//
+server.pre(function(req, res, next){
+	req.log.info({req: req}, 'start');
+	return next();
+});
+
+server.on('after', function(req, res, route) {
+	req.log.info({res: res}, 'finished');
+});
+
 
 // a container for some doors
 var doors = {};
 
+//
+// Helper functions for doors
+//
 function createDoor(colour) {
 	var retval = new door.Door(colour);
 	retval.domain = null;
@@ -33,6 +77,9 @@ function setOpenHandler(doorInstance) {
 	});
 }
 
+//
+// Routes
+//
 server.get('/doors', function(req, res, next) {
 	res.send(doors);
 	return next(); 
@@ -90,6 +137,9 @@ server.put('/door/:colour/close', function(req, res, next) {
 	return next();
 });
 
+//
+// Start server
+//
 server.listen(3000, function(){
 	console.log('node.js server %s listening at %s', server.name, server.url);
 });
