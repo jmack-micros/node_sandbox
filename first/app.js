@@ -1,8 +1,6 @@
 var restify = require('restify');
-var door = require('./door.js');
-
-var Logger = require('bunyan');
-var log = new Logger({
+var bunyan = require('bunyan');
+var log = bunyan.createLogger({
 	name: "first",
 	streams: [
 		// {
@@ -19,8 +17,8 @@ var log = new Logger({
 		}
 	],
 	serializers: {
-		req: Logger.stdSerializers.req,
-		res: Logger.stdSerializers.res
+		req: bunyan.stdSerializers.req,
+		res: bunyan.stdSerializers.res
 	}
 });
 
@@ -29,12 +27,14 @@ var server = restify.createServer({
 	log: log
 });
 
+var door = require('./door.js');
+
 server
 	.use(restify.fullResponse())
 	.use(restify.bodyParser())
 	.use(restify.queryParser());
 
-//set Connection: close header for curl
+//set Connection: close header workaround for curl
 server
 	.pre(restify.pre.userAgentConnection());
 
