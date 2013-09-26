@@ -1,30 +1,9 @@
 var restify = require('restify');
-var bunyan = require('bunyan');
-var log = bunyan.createLogger({
-	name: "first",
-	streams: [
-		// {
-		// 	stream: process.stdout,
-		// 	level: 'debug'
-		// },
-		{
-			path: "./logs/first.info.log",
-			level: "info"
-		},
-		{
-			path: "./logs/first.error.log",
-			level: "error"
-		}
-	],
-	serializers: {
-		req: bunyan.stdSerializers.req,
-		res: bunyan.stdSerializers.res
-	}
-});
+var logger = require('./logger.js');
 
 var server = restify.createServer({
 	name: 'first',
-	log: log
+	log: logger
 });
 
 var door = require('./door.js');
@@ -65,14 +44,14 @@ function createDoor(colour) {
 
 function setCloseHandler(doorInstance) {
 	doorInstance.once('close', function(stream) {
-		console.log('Server says: The %s door was closed.', this.colour);
+		logger.info({colour: this.colour, action: "closed"}, 'doorClosed');
 		setOpenHandler(this);
 	});
 }
 
 function setOpenHandler(doorInstance) {
 	doorInstance.once('open', function(stream) {
-		console.log('Server says: The %s door was opened.', this.colour);
+		logger.info({colour: this.colour, action: "opened"}, 'doorOpened');
 		setCloseHandler(this);
 	});
 }
@@ -155,6 +134,13 @@ server.put('/door/:colour/close', function(req, res, next) {
 	}
 	return next();
 });
+
+
+//
+// Try setting up a route from another module
+//
+var externalRoutes = require('./external-routes.js');
+externalRoutes.setup(server);
 
 //
 // Start server
