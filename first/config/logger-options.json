@@ -1,0 +1,13 @@
+{
+	"name": "first",
+	"streams": [
+			{
+			"path": "./logs/first.info.log",
+			"level": "info"
+		},
+		{
+			"path": "./logs/first.error.log",
+			"level": "error"
+		}
+	]
+}
