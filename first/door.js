@@ -1,28 +1,28 @@
 var util = require('util');
 var events = require('events');
+var logger = require('./logger.js');
+
 
 (function(exports){
 
-	var eventEmitter = new events.EventEmitter();
-
-	exports.Door = function Door(hue) {
+	exports.Door = function Door(colour) {
 
 		events.EventEmitter.call(this);
 
-		this.colour = hue;
+		this.colour = colour;
 		this.state = "closed";
 
 		var self = this;
 
 		var logEvent = function() {
 			return function() {
-				console.log('Door says: The %s door is now %s.', self.colour, self.state);
+				logger.info({colour: self.colour, state: self.state}, "Door says");
 			};
 		}();
 
 		var logListener = function(){
 			return function(eventName){
-				console.log('Door says: the %s door has a %s', self.colour, eventName);
+				logger.info({colour: self.colour, eventNamed: eventName}, "Door says");
 			};
 		}();
 		
@@ -46,7 +46,6 @@ var events = require('events');
 
 		this.on('newListener', function(stream) {
 			logListener('new listener');
-			console.log(util.inspect(this.listeners('open')));
 		});
 
 		this.on('removeListener', function(stream) {
