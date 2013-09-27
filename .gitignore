@@ -10,5 +10,6 @@ lib-cov
 pids
 logs
 results
+keys
 
 npm-debug.log
