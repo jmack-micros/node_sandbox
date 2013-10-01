@@ -1,0 +1,14 @@
+{
+	"name": "fourth",
+	"description": "fourth restify app",
+	"version": "0.0.1",
+	"private": true,
+	"dependencies": {
+		"restify": "latest",
+		"async": "latest",
+		"bunyan": "latest",
+		"JSONSelect": "latest",
+		"nodeunit": "latest",
+		"underscore": "latest"
+	} 
+}
