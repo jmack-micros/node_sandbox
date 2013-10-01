@@ -74,37 +74,36 @@ server.get('/series/:firstDelay/:secondDelay', function(req, res, next) {
 });
 
 server.get('/parallel/:firstDelay/:secondDelay', function(req, res, next) {
-	var message = [];
 	async.parallel(
 		[
 			function (callback) {
 				callDelay(req.params.firstDelay, function(error, request, response, data) {
-					message.push(data);
-					callback();
+					// not using an closure, but using optional form of callback()...
+					callback(null, data);
 				});
 			},
 			function (callback) {
 				callDelay(req.params.secondDelay, function(error, request, response, data) {
-					message.push(data);
-					callback();
+					callback(null, data);
 				});				
 			}
 		],
-		function (err) {
+		function (err, results) {
+			// in this form of the callback using the optional results parameter :)
 			if(err) {
 				return next(err);
 			}
-			res.send(message);
+			res.send(results);
 			return next();
 		}
 	);
 });
 
-server.get('/foreach/:delays', function (req, res, next) {
+server.get('/each/:delays', function (req, res, next) {
 	var delays = req.params.delays.split('-');
 	var message = [];
 
-	async.forEach(delays, function (delay, callback) {
+	async.each(delays, function (delay, callback) {
 		callDelay(delay, function (error, request, response, data) {
 			if (error) {
 				callback(error);
@@ -122,12 +121,12 @@ server.get('/foreach/:delays', function (req, res, next) {
 	});
 });
 
-server.get('foreachlimit/:limit/:delays', function (req, res, send) {
+server.get('eachlimit/:limit/:delays', function (req, res, next) {
 	var limit = req.params.limit;
 	var delays = req.params.delays.split('-');
 	var message = [];
 
-	async.forEachLimit(delays, limit, function (delay, callback) {
+	async.eachLimit(delays, limit, function (delay, callback) {
 		callDelay(delay, function (err, req, res, data) {
 			if(err) {
 				callback(err);
@@ -145,6 +144,27 @@ server.get('foreachlimit/:limit/:delays', function (req, res, send) {
 		return next();
 	});
 });
+
+server.get('eachseries/:delays', function (req, res, next) {
+	var delays = req.params.delays.split('-');
+	var message = [];
+
+	async.eachSeries(delays, function (delay, callback){
+		callDelay(delay, function (err, req, res, data) {
+			if(err) {
+				callback(err);
+				return;
+			}
+			message.push(data);
+			callback();
+		});
+	}, 
+	function(err) {
+		sendResponse(err, message, req, res, next);
+	});
+
+});
+
 
 
 
