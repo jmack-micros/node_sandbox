@@ -5,45 +5,12 @@ var keyLength = 512;
 
 //
 // require()s...
-var restify = require('restify');
 var redis = require('redis');
 var crypto = require('crypto');
-var client = redis.createClient();
-
-//
-// Creates a user in redis. Hashes and salts their password.
-function createUser(username, password, callback) {
-	//check if exists
-	userExists(username, function (err, exists) {
-		if(err) {
-			callback(err, null);
-			return;
-		}
-		if(exists) {
-			callback(null, {success: false, errorText: "Username already exists."});
-			return;
-		}
-		// create their credentials
-		createSaltedHash(password, function (err, credentials) {
-			if(err) {
-				callback(err, null);
-				return;
-			}
-			// store in redis
-			putUserIntoStore(username, credentials, function (err) {
-				if(err) {
-					callback(err, null);
-					return;
-				}
-				callback(null, {success: true});
-			});
-		});
-	});
-}
 
 //
 // Checks if a user exists already in redis.
-function userExists(username, callback) {
+function userExists(client, username, callback) {
 	client.exists(createUserKey(username), function(err, obj) {
 		if(err) {
 			callback(err, null);
@@ -59,7 +26,7 @@ function userExists(username, callback) {
 
 //
 // Stores a user in redis
-function putUserIntoStore(username, credentials, callback) {
+function putUserIntoStore(client, username, credentials, callback) {
 	client.hmset(createUserKey(username), 
 		"username", username, 
 		'hashed.password', credentials.derivedKey, 
@@ -74,28 +41,8 @@ function putUserIntoStore(username, credentials, callback) {
 }
 
 //
-// Checks a user's username and password against redis. 401 if no creds sent in request. 403 if not authenticated.
-function checkCredentials() {
-	return function (req, res, next) {
-		if(!req.authorization.basic) {
-			res.setHeader('WWW-Authenticate', 'Basic');
-			res.send(401);
-			return next();
-		}
-		var username = req.authorization.basic.username;
-		var password = req.authorization.basic.password;
-		isAuthorised(username, password, function (err, authorized) {
-			if(err || !authorized) {
-				return next(new restify.NotAuthorizedError('Invalid credentials.'));		
-			}
-			return next();
-		});
-	}
-}
-
-//
 // Checks redis to see if a user is authorized
-function isAuthorised(username, password, callback) {
+function isAuthorised(client, username, password, callback) {
 	//find user in redis; if not there callback(err, null);
 	client.hgetall(createUserKey(username), function (err, obj) {
 		if(err) {
@@ -143,6 +90,79 @@ function createSaltedHash(plaintextPassword, callback) {
 function createUserKey(username) {
 	return "username:" + username;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//  Functions assigned to exports
+//
+
+//
+// Checks a user's username and password against redis. 401 if no creds sent in request. 403 if not authenticated.
+function checkCredentials() {
+
+	return function (req, res, next) {
+		
+		if(!req.authorization.basic) {
+			res.setHeader('WWW-Authenticate', 'Basic');
+			res.send(401);
+			return next();
+		}
+
+		var username = req.authorization.basic.username;
+		var password = req.authorization.basic.password;
+		var client = redis.createClient();
+
+		isAuthorised(client, username, password, function (err, authorized) {
+			if(err || !authorized) {
+				client.quit();
+				return next(new restify.NotAuthorizedError('Invalid credentials.'));		
+			}
+			client.quit();
+			return next();
+		});
+	}
+}
+
+//
+// Creates a user in redis. Hashes and salts their password.
+function createUser(username, password, callback) {
+	var client = redis.createClient();
+	//check if exists
+	userExists(client, username, function (err, exists) {
+		if(err) {
+			client.quit();
+			callback(err, null);
+			return;
+		}
+		if(exists) {
+			client.quit();
+			callback(null, {success: false, errorText: "Username already exists."});
+			return;
+		}
+		// create their credentials
+		createSaltedHash(password, function (err, credentials) {
+			if(err) {
+				client.quit();
+				callback(err, null);
+				return;
+			}
+			// store in redis
+			putUserIntoStore(client, username, credentials, function (err) {
+				if(err) {
+					client.quit();
+					callback(err, null);
+					return;
+				}
+				client.quit();
+				callback(null, {success: true});
+			});
+		});
+	});
+}
+
+//
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //
 // Export these things:
