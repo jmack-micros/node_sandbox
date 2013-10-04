@@ -1,0 +1,12 @@
+{
+	"name": "basicauth",
+	"description": "basicauth restify app",
+	"version": "0.0.1",
+	"private": true,
+	"dependencies": {
+		"restify": "latest",
+		"async": "latest",
+		"bunyan": "latest",
+		"underscore": "latest"
+	} 
+}
