@@ -1,0 +1,10 @@
+This is a four-stage process.  In this example we are creating stuff for the domain julianmack.dev. Replace this as necessary.
+
+openssl genrsa -out ./julianmack.dev.key 2048
+
+openssl req -new -key ./julianmack.dev.key -out ./julianmack.dev.csr
+
+openssl x509 -req -days 365 -in julianmack.dev.csr -signkey julianmack.dev.key -out julianmack.dev.crt
+
+openssl x509 -in julianmack.dev.crt -out julianmack.dev.pem -outform PEM
+
