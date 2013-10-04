@@ -1,7 +1,6 @@
 var restify = require('restify');
 var fs = require('fs');
 var membership = require('./lib/redis-membership.js');
-var salter = require('./lib/salter.js');
 
 var server = restify.createServer({
 	name: "basicauth",
